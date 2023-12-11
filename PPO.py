@@ -10,7 +10,10 @@ import gym
 ##L'une des idees pour les methodes modernes dont l PPO st d'utilisr un loss surrogate. C'st à dir controllr la taill du stp siz pour vitr de fair ds pas trop gros.
 #stp too far = mauvais policy car ça fauss ls informations qu'on aura plus tard car lls sront rcolt sur l nouveau modèle.  
 #La TRPO, on chrch à optimisr la loss surrogat, tout n consrvant un faible distance (distance KL) ntr l'ancienn et la nouvelle policy.
-#A la différence de la TRPO, la PPO permets d'éviter d'utiliser une erreur de second ordre.
+#A la différence de la TRPO, la PPO permets d'éviter d'utiliser une erreur de second ordre, pour mieux s'adapter aux frameworks de deep learning
+
+#Avec la TRPO, on cherche à optimisr la surrogate loss tout en ayant une contrainte KL entre l'ancienne et la nouvelle policy. Avec la PPO, on fusionne la surrogate loss et la contrainte KL en un seul problème d'optimisation.
+
 # Environnement CartPole
 env = gym.make('CartPole-v0')
 observation_dimension = env.observation_space.shape[0]
