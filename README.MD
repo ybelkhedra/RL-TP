@@ -31,7 +31,7 @@ $$ L^{CLIP}(\theta) = \hat{\mathbb{E}}_t \left[ \min\left(r_t(\theta) \hat{A}_t,
 
 Finalement, nous utiliserons la formule suivante :
 
-$$ L^{CLIP+VF+S}_t(\theta) = \hat{E}_t \left[ L^{CLIP}_t(\theta) - c_1 L^{VF}(\theta) + c_2 S[\pi_\theta \right]
+$$ \ L^{CLIP+VF+S}_t(\theta) = \hat{E}_t \left[ L^{CLIP}_t(\theta) - c_1 L^{VF}(\theta) + c_2 S[\pi_\theta \right]]
  $$
 
 où $c_1$ et $c_2$ représentent des coefficients, $L^{VF}(\theta)$ l'erreur moyenne au carré des valeurs de l'état et $S[\pi_\theta]$ une valeur d'entropie bonus qui garantit assez d'exploitation. 
