@@ -22,7 +22,7 @@ L'idée principale de la méthode PPO est de contrôler notre pas d'apprentissag
 Avec la TRPO, on cherche à optimisr l'erreur surrogate tout en ayant une contrainte KL entre l'ancienne et la nouvelle policy. Avec la PPO, on fusionne l'erreur surrogate et la contrainte KL en un seul problème d'optimisation. Ainsi, le problème devient plus simple et réalisable avec les bibliothèques de machine learning comme Pytorch. Le problèle d'optimisation initiale peut s'écrire par la formule ci-dessous. La variable $\hat{A}_t$ correspond à l'avantage d'une action, calculé à partir de ce que nous font gagner les autres actions. Ainsi, s'il est positif, on souhaite augmenter la probabilité de choisir cette action à cet état car elle est meilleur que la moyenne des autres actions sur cet état. Si l'avantage est négatif, on souhaite alors diminuer la probabilité de prendre cet action.
 
 
- $$ L^{\text{CPI}}(\theta) = \hat{\mathbb{E}}_t \left[ \frac{\pi_\theta(a_t | s_t)}{\pi_{\theta_{\text{old}}}(a_t | s_t)} \hat{A}_t \right] = \hat{\mathbb{E}}_t [r_t(\theta) \hat{A}_t] $$
+ $$ L^{CPI}(\theta) = \hat{\mathbb{E}}_t \left[ \frac{\pi_\theta(a_t | s_t)}{\pi_{\theta_{\text{old}}}(a_t | s_t)} \hat{A}_t \right] = \hat{\mathbb{E}}_t [r_t(\theta) \hat{A}_t] $$
 
 Avec PPO, on souhaite éviter que le ratio entre la nouvelle policy et l'ancienne aie des valeurs trop extrême (trop proche de 0 ou trop au dessus de 1), on utilise alors un clipping pour borner le ratio entre $1-\epsilon$ et $1+\epsilon$. Les différents articles de recherche conseillent $\epsilon = 0.2$. La formule devient alors la suivante :
 
