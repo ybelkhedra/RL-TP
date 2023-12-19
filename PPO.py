@@ -6,7 +6,7 @@ import numpy as np
 import gym
 import argparse
 import os
-
+import matplotlib.pyplot as plt
 
 ##Architecture du réseau neuronal
 class PolicyNetwork(nn.Module):
@@ -68,12 +68,14 @@ class PPO:
             self.optimizer.step()
 
 
-def train(num_episodes, dest_file, env, observation_dimension, action_dim):
+def train(num_episodes, dest_file, env, observation_dimension, action_dim, verbose=True):
     ##Initialisation de l'agent PPO
     ppo_agent = PPO(observation_dimension, action_dim)
 
     ##Entraînement sur plusieurs épisodes
     max_steps = 500
+    total_reward_list = []
+
     for episode in range(num_episodes):
         state, _ = env.reset()
         states, actions, rewards, old_action_probs = [], [], [], []
@@ -109,7 +111,8 @@ def train(num_episodes, dest_file, env, observation_dimension, action_dim):
         ##Mettre à jour la politique
         ppo_agent.update_policy(states, actions, old_action_probs, advantages, returns)
 
-        if episode % 10 == 0:
+        total_reward_list.append(total_reward)
+        if episode % 10 == 0 and verbose:
             print(f"Episode {episode}, Total Reward: {total_reward}")
             print("Average score of the policy: {}".format(total_reward / (episode + 1)))
 
@@ -118,10 +121,11 @@ def train(num_episodes, dest_file, env, observation_dimension, action_dim):
     if not os.path.exists("results"):
         os.makedirs("results")
     
-    path_file = os.path.join("results", dest_file)
-    torch.save(ppo_agent.policy_network.state_dict(), path_file)
+    if dest_file is not None:
+        path_file = os.path.join("results", dest_file)
+        torch.save(ppo_agent.policy_network.state_dict(), path_file)
 
-
+    return total_reward_list
 if __name__ == "__main__":
     ##parser pour récupérer les arguments
     parser = argparse.ArgumentParser()
@@ -137,4 +141,9 @@ if __name__ == "__main__":
     action_dim = env.action_space.n
 
     ##Entraînement de l'agent
-    train(num_episodes, dest_file, env, observation_dimension, action_dim)
+    total_rewards = train(num_episodes, dest_file, env, observation_dimension, action_dim)
+    plt.plot(total_rewards)
+    plt.xlabel('Episode')
+    plt.ylabel('Total Reward')
+    plt.title('Total Reward vs Episode')
+    plt.show()

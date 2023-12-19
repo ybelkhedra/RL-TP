@@ -55,6 +55,10 @@ Les poids du réseau de neurones seront sauvegardés dans un dossier results. Ce
 python3 test.py [--src_file, -f] results/ppo_agent.pth
 ```
 
+### Résultats et observations
+
+En lançant plusieurs expériences, on observe que 1500 épisodes suffisent pour que le modèle donne des résultats satisfaisants. Le modèle a l'air plutôt stable car les entraînements sont souvent bons. On observe en effet qu'au fil des épisodes, les scores totaux sont plus souvent près du score maximal de 500.
+
 ### Sources
 
 "L4 TRPO and PPO (Foundations of Deep RL Series)" YouTube, uploaded by Pieter Abbeel, published August 25, 2021, https://www.youtube.com/watch?v=KjWF8VIMGiY
