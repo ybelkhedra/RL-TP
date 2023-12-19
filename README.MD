@@ -9,7 +9,7 @@ Dans ce rendu de TP, on cherche à résoudre le problème suivant pour un cas si
 #### Environnemment : CartPole-v0
 
 Ici, nous choisissons d'entraîner un agent sur l'environnement CartPole-v0 de Gym, qui est discret.
-Cet environnement simule un pendule inversé fixé sur un chariot en mouvement. L'objectif est de maintenir le pendule en équilibre vertical en évitant qu'il ne tombe complètement vers le haut (90 degrés) ou vers le bas (-90 degrés) en ayant comme actions possibles d'appliquer une force vers la gauche ou la droite sur le chariot. Les récompenses sont +1 à chaque pas de temps tant que le pendule reste dans des limites d'inclinaison acceptables. L'épisode se termine lorsque le pendule s'incline au-delà d'un certain angle ou lorsque le chariot sort de limites prédéfinies. Pour cet environnement le score maximal est 200, score qui représente le maintien parfait de l'équilibre pendant 200 pas de temps consécutifs.
+Cet environnement simule un pendule inversé fixé sur un chariot en mouvement. L'objectif est de maintenir le pendule en équilibre vertical en évitant qu'il ne tombe complètement vers le haut (90 degrés) ou vers le bas (-90 degrés) en ayant comme actions possibles d'appliquer une force vers la gauche ou la droite sur le chariot. Les récompenses sont +1 à chaque pas de temps tant que le pendule reste dans des limites d'inclinaison acceptables. L'épisode se termine lorsque le pendule s'incline au-delà d'un certain angle ou lorsque le chariot sort de limites prédéfinies. Pour cet environnement le score maximal est 500, score qui représente le maintien parfait de l'équilibre pendant 500 pas de temps consécutifs.
 
 #### Agent
 
@@ -34,7 +34,26 @@ Finalement, nous utiliserons la formule suivante :
 $$ L^{CLIP+VF+S}_t(\theta) = \hat{\mathbb{E}}_t \left[ L^{CLIP}_{t} (\theta) - c_{1} L^{VF}(\theta) + c_{2} S[\pi_{\theta}] \right] $$
 
 
-où $c_1$ et $c_2$ représentent des coefficients, $L^{VF}(\theta)$ l'erreur moyenne au carré des valeurs de l'état et $S[\pi_\theta]$ une valeur d'entropie bonus qui garantit assez d'exploitation. 
+où $c_1$ et $c_2$ représentent des coefficients, $L^{VF}(\theta)$ l'erreur moyenne au carré des valeurs de l'état et $S[\pi_\theta]$ une valeur d'entropie bonus qui garantit assez d'exploitation.
+
+### Utilisation du projet
+
+L'entraînement d'un agent avec la méthode PPO est possible avec l'utilisation de la commande :
+```bash
+python3 PPO.py [--num_episodes, -n] 1500 [--dest_file, -f] ppo_agent.pth
+```
+
+ou pour plus d'aides :
+
+```bash
+python3 PPO.py -h
+```
+
+Les poids du réseau de neurones seront sauvegardés dans un dossier results. Celui-ci sera créé s'il n'est pas déjà existant. Vous pouvez tester le réseau de neurones entraîné avec la commande suivante :
+
+```bash
+python3 test.py [--src_file, -f] results/ppo_agent.pth
+```
 
 ### Sources
 

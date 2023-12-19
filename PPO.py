@@ -3,19 +3,14 @@ import torch.nn as nn
 from torch.distributions.categorical import Categorical
 from torch.optim import Adam
 import numpy as np
-from gym.spaces import Discrete, Box
-import random
 import gym
+import argparse
+import os
 
-
-##Environnement CartPole
-env = gym.make('CartPole-v0', render_mode="human")
-observation_dimension = env.observation_space.shape[0]
-action_dim = env.action_space.n
 
 ##Architecture du réseau neuronal
 class PolicyNetwork(nn.Module):
-    def __init__(self):
+    def __init__(self, observation_dimension, action_dim):
         super(PolicyNetwork, self).__init__()
         self.fc1 = nn.Linear(observation_dimension, 64)
         self.fc2 = nn.Linear(64, action_dim)
@@ -29,8 +24,8 @@ class PolicyNetwork(nn.Module):
 
 ##Algorithme PPO
 class PPO:
-    def __init__(self):
-        self.policy_network = PolicyNetwork()
+    def __init__(self, observation_dimension, action_dim):
+        self.policy_network = PolicyNetwork(observation_dimension, action_dim)
         self.optimizer = Adam(self.policy_network.parameters(), lr=0.001)
         self.gamma = 0.99 ##Facteur de réduction de la récompense
         self.epsilon = 0.2  ##Valeur pour borner le clipping
@@ -52,6 +47,8 @@ class PPO:
         returns = torch.FloatTensor(returns)
 
         for _ in range(5):  ##Nombre d'itérations sur les échantillons
+            self.optimizer.zero_grad()
+
             action_probs, state_values = self.policy_network(states)
             action_distribution = torch.distributions.Categorical(action_probs)
             entropy = action_distribution.entropy() ##Calcul de l'entropie de la distribution de probabilité
@@ -67,65 +64,77 @@ class PPO:
 
             loss = policy_loss + 0.5 * value_loss - 0.01 * entropy.mean() ##Calcul de la loss totale L^{CLIP+VF+S}_theta
 
-            self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
 
-##Initialisation de l'agent PPO
-ppo_agent = PPO()
 
-##Entraînement sur plusieurs épisodes
-num_episodes = 500
-max_steps = 500
-for episode in range(num_episodes):
-    state, _ = env.reset()
-    states, actions, rewards, old_action_probs = [], [], [], []
-    total_reward = 0
+def train(num_episodes, dest_file, env, observation_dimension, action_dim):
+    ##Initialisation de l'agent PPO
+    ppo_agent = PPO(observation_dimension, action_dim)
 
-    ##on sample les actions, rewards et les probas d'activer l'action sur notre agent
-    for step in range(max_steps):
-        action, old_action_prob = ppo_agent.choose_action(state) ##on récupère la prochaine action et la proba de l'action actuelle
-        next_state, reward, done, _, __ = env.step(action) ##on récupère l'état suivant et la recompense en fonction de la prochaine action
+    ##Entraînement sur plusieurs épisodes
+    max_steps = 500
+    for episode in range(num_episodes):
+        state, _ = env.reset()
+        states, actions, rewards, old_action_probs = [], [], [], []
+        total_reward = 0
 
-        states.append(state)
-        actions.append(action)
-        rewards.append(reward)
-        old_action_probs.append(old_action_prob.item())
+        ##on sample les actions, rewards et les probas d'activer l'action sur notre agent
+        for step in range(max_steps):
+            action, old_action_prob = ppo_agent.choose_action(state) ##on récupère la prochaine action et la proba de l'action actuelle
+            next_state, reward, done, _, __ = env.step(action) ##on récupère l'état suivant et la recompense en fonction de la prochaine action
 
-        total_reward += reward
-        state = next_state
+            states.append(state)
+            actions.append(action)
+            rewards.append(reward)
+            old_action_probs.append(old_action_prob.item())
 
-        if done: ##Si l'episode est fini, on break la boucle
-            break
+            total_reward += reward
+            state = next_state
 
-    ##Calcul des avantages et des retours
-    returns = []
-    advantage = 0
-    for r in rewards[::-1]:
-        advantage = r + ppo_agent.gamma * advantage
-        returns.insert(0, advantage)
-    advantages = torch.tensor(returns) - torch.tensor(old_action_probs)
+            if done: ##Si l'episode est fini, on break la boucle
+                break
 
-    ##Normalisation des avantages
-    advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
+        ##Calcul des avantages et des retours
+        returns = []
+        advantage = 0
+        for r in rewards[::-1]:
+            advantage = r + ppo_agent.gamma * advantage
+            returns.insert(0, advantage)
+        advantages = torch.tensor(returns) - torch.tensor(old_action_probs)
 
-    ##Mettre à jour la politique
-    ppo_agent.update_policy(states, actions, old_action_probs, advantages, returns)
+        ##Normalisation des avantages
+        advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
 
-    if episode % 10 == 0:
-        print(f"Episode {episode}, Total Reward: {total_reward}")
-        print("Average score of the policy: {}".format(total_reward / (episode + 1)))
+        ##Mettre à jour la politique
+        ppo_agent.update_policy(states, actions, old_action_probs, advantages, returns)
+
+        if episode % 10 == 0:
+            print(f"Episode {episode}, Total Reward: {total_reward}")
+            print("Average score of the policy: {}".format(total_reward / (episode + 1)))
 
 
-#now it is train, let's test it
-state, _ = env.reset()
-done = False
-total_reward = 0
-while not done:
-    action, _ = ppo_agent.choose_action(state)
-    state, reward, done, _, __ = env.step(action)
-    total_reward += reward
-    # env.render()
-        
-print("Total reward of the policy: {}".format(total_reward))
-env.close()
+    ##Sauvegarde du modèle
+    if not os.path.exists("results"):
+        os.makedirs("results")
+    
+    path_file = os.path.join("results", dest_file)
+    torch.save(ppo_agent.policy_network.state_dict(), path_file)
+
+
+if __name__ == "__main__":
+    ##parser pour récupérer les arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--num_episodes", "-n", type=int, default=1000, help="number of episodes to train on")
+    parser.add_argument("--dest_file", "-f", type=str, default="ppo_agent.pth", help="name of the file to save the model. The model will be saved in the results folder")
+    args = parser.parse_args()
+    num_episodes = args.num_episodes
+    dest_file = args.dest_file
+
+    ##Initialisation de l'environnement
+    env = gym.make('CartPole-v0')
+    observation_dimension = env.observation_space.shape[0]
+    action_dim = env.action_space.n
+
+    ##Entraînement de l'agent
+    train(num_episodes, dest_file, env, observation_dimension, action_dim)
