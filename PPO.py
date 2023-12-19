@@ -9,7 +9,7 @@ import gym
 
 
 ##Environnement CartPole
-env = gym.make('CartPole-v0')
+env = gym.make('CartPole-v0', render_mode="human")
 observation_dimension = env.observation_space.shape[0]
 action_dim = env.action_space.n
 
@@ -75,7 +75,7 @@ class PPO:
 ppo_agent = PPO()
 
 ##Entraînement sur plusieurs épisodes
-num_episodes = 1000
+num_episodes = 500
 max_steps = 500
 for episode in range(num_episodes):
     state, _ = env.reset()
@@ -95,7 +95,7 @@ for episode in range(num_episodes):
         total_reward += reward
         state = next_state
 
-        if done:
+        if done: ##Si l'episode est fini, on break la boucle
             break
 
     ##Calcul des avantages et des retours
@@ -116,4 +116,16 @@ for episode in range(num_episodes):
         print(f"Episode {episode}, Total Reward: {total_reward}")
         print("Average score of the policy: {}".format(total_reward / (episode + 1)))
 
+
+#now it is train, let's test it
+state, _ = env.reset()
+done = False
+total_reward = 0
+while not done:
+    action, _ = ppo_agent.choose_action(state)
+    state, reward, done, _, __ = env.step(action)
+    total_reward += reward
+    # env.render()
+        
+print("Total reward of the policy: {}".format(total_reward))
 env.close()
